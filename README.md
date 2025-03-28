@@ -38,6 +38,9 @@ Este laboratorio busca desarrollar una aplicación que permita a los usuarios re
 * [![Linkedin][Linkedin]][Linkedin-monti]
 * [![GitHub][GitHub]][GitHub-monti]
 
+## 📐 Diagrama de Arquitectura
+![Lab4](https://github.com/user-attachments/assets/67e19bfd-cd89-44f7-9372-1ea7956d5402)
+
 <!-- MARKDOWN LINKS & IMAGES -->
 [Python]: https://img.shields.io/badge/Python-4B8BBE?style=for-the-badge&logo=python&logoColor=white
 [Python-url]: https://www.python.org
