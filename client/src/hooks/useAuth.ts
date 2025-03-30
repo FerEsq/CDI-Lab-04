@@ -1,7 +1,7 @@
 import { useLoginMutation } from "../store/api/api-slice";
 
 const useAuth = () => {
-    const [handleLoginMutation] = useLoginMutation()
+    const [handleLoginMutation, { isLoading: isLoginLoading }] = useLoginMutation()
 
     const handleLogin = async (email: string, password: string, callback: () => void) => {
         try {
@@ -14,7 +14,10 @@ const useAuth = () => {
         }
     }
 
-    return { handleLogin };
+    return { 
+        handleLogin, 
+        isLoginLoading
+    };
 }
 
 export default useAuth;

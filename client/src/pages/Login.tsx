@@ -8,7 +8,8 @@ const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const { handleLogin } = useAuth();
+  // TODO: use isLoginLoading later for a loader
+  const { handleLogin, isLoginLoading } = useAuth();
   const from = location.state?.from?.pathname || '/';
 
   const onLogin = (email: string, password: string) => {
@@ -36,6 +37,8 @@ const Login = () => {
       onLogin(values.email, values.password);
     },
   });
+
+
 
   return (
     <div>
