@@ -4,7 +4,9 @@ import os
 from datetime import datetime
 from config.database import get_db
 from utils.auth import token_required
-
+from utils.crypto import sign_file, verify_signature
+from cryptography.hazmat.primitives import serialization
+from bson import ObjectId
 files_bp = Blueprint('files', __name__)
 
 @files_bp.route('/', methods=['GET'])
@@ -20,7 +22,7 @@ def get_files(current_user):
     
     return jsonify(files), 200
 
-@files_bp.route('/guardar', methods=['POST'])
+@files_bp.route('/upload', methods=['POST'])
 @token_required
 def save_file(current_user):
     if 'file' not in request.files:
@@ -47,13 +49,32 @@ def save_file(current_user):
         'created_at': datetime.utcnow()
     }
     
+    # Check if file should be signed
+    should_sign = request.form.get('sign', 'false').lower() == 'true'
+    if should_sign:
+        # Get user's private key from PEM format
+        private_key = serialization.load_pem_private_key(
+            current_user['private_key'].encode('utf-8'),
+            password=None
+        )
+        
+        # Sign the file
+        signature = sign_file(file_path, private_key)
+        
+        # Update file document with signature
+        file_doc.update({
+            'is_signed': True,
+            'signature': signature,
+            'signed_at': datetime.utcnow()
+        })
+    
     result = db.files.insert_one(file_doc)
     file_doc['_id'] = str(result.inserted_id)
     file_doc['owner_id'] = str(file_doc['owner_id'])
     
     return jsonify(file_doc), 201
 
-@files_bp.route('/<file_id>/descargar', methods=['GET'])
+@files_bp.route('/<file_id>/download', methods=['GET'])
 @token_required
 def download_file(current_user, file_id):
     db = get_db()
@@ -68,18 +89,38 @@ def download_file(current_user, file_id):
         download_name=file_doc['original_name']
     )
 
-@files_bp.route('/verificar', methods=['POST'])
+@files_bp.route('/verify', methods=['POST'])
 @token_required
-def verify_signature(current_user):
+def verify_signature_endpoint(current_user):
     data = request.get_json()
-    if not data or 'file_id' not in data or 'public_key' not in data:
+    print("data", data)
+    if not data or 'file_id' not in data:
         return jsonify({'error': 'Missing required fields'}), 400
     
     db = get_db()
-    file_doc = db.files.find_one({'_id': data['file_id']})
+    file_doc = db.files.find_one({'_id': ObjectId(data['file_id'])})
     
     if not file_doc:
         return jsonify({'error': 'File not found'}), 404
     
-    # TODO: Implement signature verification logic
-    return jsonify({'message': 'Signature verification endpoint'}), 200 
+    if not file_doc.get('is_signed', False):
+        return jsonify({'error': 'File is not signed'}), 400
+    
+    user_public_key = current_user['public_key']
+    
+    # Load public key from PEM format
+    public_key = serialization.load_pem_public_key(
+        user_public_key.encode('utf-8')
+    )
+    
+    # Verify signature
+    is_valid = verify_signature(
+        file_doc['path'],
+        file_doc['signature'],
+        public_key
+    )
+    
+    return jsonify({
+        'is_valid': is_valid,
+        'message': 'Signature is valid' if is_valid else 'Signature is invalid'
+    }), 200 
