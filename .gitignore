@@ -1,0 +1,10 @@
+node_modules/
+.env
+uploads/
+*.log
+.DS_Store 
+
+database-data/
+main.py
+__pycache__/
+env/
