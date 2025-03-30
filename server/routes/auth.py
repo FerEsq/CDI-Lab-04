@@ -62,23 +62,3 @@ def login():
     )
     
     return jsonify({'token': token}), 200 
-
-@auth_bp.route('/logout', methods=['POST'])
-def logout():
-    response = jsonify({'message': 'Logout successful'})
-    response.delete_cookie('token')
-    return response, 200
-
-@auth_bp.route('/verify_token', methods=['POST'])
-def verify_token():
-    token = request.headers.get('Authorization')
-    if not token:
-        return jsonify({'error': 'No token provided'}), 401
-    try:
-        jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
-        return jsonify({'message': 'Token is valid'}), 200
-    except jwt.ExpiredSignatureError:
-        return jsonify({'error': 'Token has expired'}), 401
-    except jwt.InvalidTokenError:
-        return jsonify({'error': 'Invalid token'}), 401
-
