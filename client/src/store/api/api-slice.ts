@@ -1,6 +1,7 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi, fetchBaseQuery, FetchBaseQueryError } from '@reduxjs/toolkit/query/react';
 import Cookies from 'js-cookie';
 import { TOKEN_COOKIE_NAME } from '../../utils/constants';
+import { setAppState } from '../slices/appState-slice';
 
 // Define types for our API responses
 interface AuthResponse {
@@ -30,19 +31,36 @@ interface FileUploadResponse {
 // Define a service using a base URL and expected endpoints
 const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
+const baseQuery = fetchBaseQuery({ 
+  baseUrl: baseUrl,
+  prepareHeaders: (headers, { getState: _ }) => {
+    // Get token from cookies
+    const token = Cookies.get(TOKEN_COOKIE_NAME);
+    if (token) {
+      headers.set('authorization', `Bearer ${token}`);
+    }
+    return headers;
+  },
+});
+
+// Create a custom base query that handles 401 errors
+export const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
+  let result = await baseQuery(args, api, extraOptions);
+
+  // If the response is 401, handle unauthorized access
+  if ((result.error as FetchBaseQueryError)?.status === 401) {
+    // Remove the token
+    Cookies.remove(TOKEN_COOKIE_NAME);
+    // Update app state to logged out
+    api.dispatch(setAppState('NOT_LOGGED_IN'));
+  }
+
+  return result;
+};
+
 export const apiSlice = createApi({
   reducerPath: 'api',
-  baseQuery: fetchBaseQuery({ 
-    baseUrl: baseUrl,
-    prepareHeaders: (headers, { getState: _ }) => {
-      // Get token from cookies
-      const token = Cookies.get(TOKEN_COOKIE_NAME);
-      if (token) {
-        headers.set('authorization', `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
+  baseQuery: baseQueryWithReauth,
   endpoints: (builder) => ({
     // Auth endpoints (unprotected)
     login: builder.mutation<AuthResponse, LoginRequest>({
@@ -90,22 +108,6 @@ export const apiSlice = createApi({
         body: formData,
       }),
     }),
-
-    // Logout endpoint
-    logout: builder.mutation<void, void>({
-      query: () => ({
-        url: 'auth/logout',
-        method: 'POST',
-      }),
-      async onQueryStarted(_arg, { queryFulfilled }) {
-        try {
-          await queryFulfilled;
-        } finally {
-          // Remove the cookie regardless of the API call result
-          Cookies.remove(TOKEN_COOKIE_NAME);
-        }
-      },
-    }),
   }),
 });
 
@@ -114,5 +116,4 @@ export const {
   useLoginMutation,
   useRegisterMutation,
   useUploadFileMutation,
-  useLogoutMutation,
 } = apiSlice; 
