@@ -7,13 +7,15 @@ from utils.auth import token_required
 from utils.crypto import sign_file, verify_signature
 from cryptography.hazmat.primitives import serialization
 from bson import ObjectId
+import uuid
+
 files_bp = Blueprint('files', __name__)
 
 @files_bp.route('/', methods=['GET'])
 @token_required
 def get_files(current_user):
     db = get_db()
-    files = list(db.files.find({'owner_id': current_user['_id']}))
+    files = list(db.files.find({'owner_id': current_user['_id']}, {'path': 0}))
     
     # Convert ObjectId to string for JSON serialization
     for file in files:
@@ -78,7 +80,7 @@ def save_file(current_user):
 @token_required
 def download_file(current_user, file_id):
     db = get_db()
-    file_doc = db.files.find_one({'_id': file_id})
+    file_doc = db.files.find_one({'_id': ObjectId(file_id)})
     
     if not file_doc:
         return jsonify({'error': 'File not found'}), 404
@@ -89,22 +91,26 @@ def download_file(current_user, file_id):
         download_name=file_doc['original_name']
     )
 
-@files_bp.route('/verify', methods=['POST'])
+@files_bp.route('/<file_id>/info', methods=['GET'])
 @token_required
-def verify_signature_endpoint(current_user):
-    data = request.get_json()
-    print("data", data)
-    if not data or 'file_id' not in data:
-        return jsonify({'error': 'Missing required fields'}), 400
-    
+def get_file_data(current_user, file_id):
     db = get_db()
-    file_doc = db.files.find_one({'_id': ObjectId(data['file_id'])})
+    # exclude path
+    file_doc = db.files.find_one({'_id': ObjectId(file_id)}, {'path': 0})
     
     if not file_doc:
         return jsonify({'error': 'File not found'}), 404
     
-    if not file_doc.get('is_signed', False):
-        return jsonify({'error': 'File is not signed'}), 400
+    # exclude _id
+    file_doc['_id'] = str(file_doc['_id'])
+    file_doc['owner_id'] = str(file_doc['owner_id'])
+    return jsonify(file_doc), 200
+    
+@files_bp.route('/verify', methods=['POST'])
+@token_required
+def verify_signature_endpoint(current_user):
+    if 'file' not in request.files:
+        return jsonify({'error': 'Missing required fields'}), 400
     
     user_public_key = current_user['public_key']
     
@@ -112,13 +118,24 @@ def verify_signature_endpoint(current_user):
     public_key = serialization.load_pem_public_key(
         user_public_key.encode('utf-8')
     )
+
+    # get file from request
+    file = request.files['file']
+    signature = request.form.get('signature')
+
+    # save file in a temp folder
+    file_path = os.path.join(current_app.config['TEMP_FOLDER'], uuid.uuid4().hex)
+    file.save(file_path)
     
     # Verify signature
     is_valid = verify_signature(
-        file_doc['path'],
-        file_doc['signature'],
+        file_path,
+        signature,
         public_key
     )
+
+    # delete file from temp folder
+    os.remove(file_path)
     
     return jsonify({
         'is_valid': is_valid,

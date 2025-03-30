@@ -14,6 +14,12 @@ def create_app():
     app.config['SECRET_KEY'] = os.getenv('JWT_SECRET')
     app.config['MONGODB_URI'] = os.getenv('MONGODB_URI')
     app.config['UPLOAD_FOLDER'] = os.getenv('UPLOAD_DIR')
+    app.config['TEMP_FOLDER'] = os.getenv('TEMP_FOLDER')
+
+    if not os.path.exists(app.config['TEMP_FOLDER']):
+        os.makedirs(app.config['TEMP_FOLDER'])
+    if not os.path.exists(app.config['UPLOAD_FOLDER']):
+        os.makedirs(app.config['UPLOAD_FOLDER'])
 
     # Ensure upload directory exists
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
