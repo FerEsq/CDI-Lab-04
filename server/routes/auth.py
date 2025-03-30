@@ -3,6 +3,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 from datetime import datetime, timedelta
 from config.database import get_db
+from utils.crypto import generate_key_pair, get_public_key_pem, get_private_key_pem
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -13,15 +14,35 @@ def register():
     if db.users.find_one({'email': data['email']}):
         return jsonify({'error': 'Email already exists'}), 400
     
+    # Generate RSA key pair for the user
+    private_key, public_key = generate_key_pair()
+    private_key_pem = get_private_key_pem(private_key).decode('utf-8')
+    public_key_pem = get_public_key_pem(public_key).decode('utf-8')
+    
     user = {
         'email': data['email'],
         'password': generate_password_hash(data['password']),
-        'public_key': None,
+        'private_key': private_key_pem,
+        'public_key': public_key_pem,
         'created_at': datetime.utcnow()
     }
+    
     db.users.insert_one(user)
-    return jsonify({'message': 'User registered successfully'}), 201
-
+    token = jwt.encode(
+        {
+            'user_id': str(user['_id']),
+            'exp': datetime.utcnow() + timedelta(hours=1)
+        },
+        current_app.config['SECRET_KEY'],
+        algorithm='HS256'
+    )
+    
+    user.pop('private_key', None)
+    return jsonify({
+        'message': 'User registered successfully',
+        'token': token,
+    }), 201
+    
 @auth_bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -34,10 +55,30 @@ def login():
     token = jwt.encode(
         {
             'user_id': str(user['_id']),
-            'exp': datetime.utcnow() + timedelta(days=1)
+            'exp': datetime.utcnow() + timedelta(hours=1)
         },
         current_app.config['SECRET_KEY'],
         algorithm='HS256'
     )
     
     return jsonify({'token': token}), 200 
+
+@auth_bp.route('/logout', methods=['POST'])
+def logout():
+    response = jsonify({'message': 'Logout successful'})
+    response.delete_cookie('token')
+    return response, 200
+
+@auth_bp.route('/verify_token', methods=['POST'])
+def verify_token():
+    token = request.headers.get('Authorization')
+    if not token:
+        return jsonify({'error': 'No token provided'}), 401
+    try:
+        jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
+        return jsonify({'message': 'Token is valid'}), 200
+    except jwt.ExpiredSignatureError:
+        return jsonify({'error': 'Token has expired'}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({'error': 'Invalid token'}), 401
+
