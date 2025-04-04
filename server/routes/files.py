@@ -34,11 +34,20 @@ def save_file(current_user):
     if file.filename == '':
         return jsonify({'error': 'No file selected'}), 400
     
+    db = get_db()
+    
     filename = secure_filename(file.filename)
     file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+
+    # check if file name is already in the database
+    if db.files.find_one({'filename': filename}):
+        # delete the file from the upload folder
+        os.remove(file_path)
+        # delete the file from the database
+        db.files.delete_one({'_id': ObjectId(file_doc['_id'])})
+
     file.save(file_path)
     
-    db = get_db()
     file_doc = {
         'filename': filename,
         'original_name': file.filename,
@@ -109,19 +118,30 @@ def get_file_data(current_user, file_id):
 @files_bp.route('/verify', methods=['POST'])
 @token_required
 def verify_signature_endpoint(current_user):
+    db = get_db()
     if 'file' not in request.files:
         return jsonify({'error': 'Missing required fields'}), 400
     
-    user_public_key = current_user['public_key']
+    # get file from request
+    file = request.files['file']
+
+    file_name = file.filename
+
+    # seatch the user id who has this file
+    file_db = db.files.find_one({'filename': file_name})
+    user_id = file_db['owner_id']
+    signature = file_db['signature']
+
+    if not signature:
+        return jsonify({'error': 'File is not signed'}), 400
+
+    # get user public key
+    user_public_key = db.users.find_one({'_id': ObjectId(user_id)})['public_key']
     
     # Load public key from PEM format
     public_key = serialization.load_pem_public_key(
         user_public_key.encode('utf-8')
     )
-
-    # get file from request
-    file = request.files['file']
-    signature = request.form.get('signature')
 
     # save file in a temp folder
     file_path = os.path.join(current_app.config['TEMP_FOLDER'], uuid.uuid4().hex)
