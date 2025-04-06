@@ -15,7 +15,7 @@ files_bp = Blueprint('files', __name__)
 @token_required
 def get_files(current_user):
     db = get_db()
-    files = list(db.files.find({'owner_id': current_user['_id']}, {'path': 0}))
+    files = list(db.files.find({}, {'path': 0}))
     
     # Convert ObjectId to string for JSON serialization
     for file in files:
