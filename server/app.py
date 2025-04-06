@@ -15,6 +15,8 @@ def create_app():
     app.config['MONGODB_URI'] = os.getenv('MONGODB_URI')
     app.config['UPLOAD_FOLDER'] = os.getenv('UPLOAD_DIR')
     app.config['TEMP_FOLDER'] = os.getenv('TEMP_FOLDER')
+    app.config['REFRESH_TOKEN_EXPIRATION_TIME'] = os.getenv('REFRESH_TOKEN_EXPIRATION_TIME')
+    app.config['ACCESS_TOKEN_EXPIRATION_TIME'] = os.getenv('ACCESS_TOKEN_EXPIRATION_TIME')
 
     if not os.path.exists(app.config['TEMP_FOLDER']):
         os.makedirs(app.config['TEMP_FOLDER'])

@@ -12,7 +12,7 @@ def generate_tokens(user_id):
     access_token = jwt.encode(
         {
             'user_id': str(user_id),
-            'exp': datetime.utcnow() + timedelta(minutes=15),
+            'exp': datetime.utcnow() + timedelta(minutes=int(current_app.config['ACCESS_TOKEN_EXPIRATION_TIME'])),
             'type': 'access'
         },
         current_app.config['SECRET_KEY'],
@@ -23,7 +23,7 @@ def generate_tokens(user_id):
     refresh_token = jwt.encode(
         {
             'user_id': str(user_id),
-            'exp': datetime.utcnow() + timedelta(days=7),
+            'exp': datetime.utcnow() + timedelta(days=int(current_app.config['REFRESH_TOKEN_EXPIRATION_TIME'])),
             'type': 'refresh'
         },
         current_app.config['SECRET_KEY'],
@@ -75,12 +75,15 @@ def login():
     
     return jsonify({
         'access_token': access_token,
-        'refresh_token': refresh_token
+        'access_token_expiration_time': int(current_app.config['ACCESS_TOKEN_EXPIRATION_TIME']) * 60 * 1000,
+        'refresh_token': refresh_token,
+        'refresh_token_expiration_time': int(current_app.config['REFRESH_TOKEN_EXPIRATION_TIME']) * 24 * 60 * 60 * 1000
     }), 200
 
 @auth_bp.route('/refresh', methods=['POST'])
 def refresh():
-    refresh_token = request.get_json().get('refresh_token')
+    data = request.get_json()
+    refresh_token = data['refresh_token']
     if not refresh_token:
         return jsonify({'error': 'Refresh token is required'}), 400
     
@@ -100,7 +103,7 @@ def refresh():
         access_token = jwt.encode(
             {
                 'user_id': payload['user_id'],
-                'exp': datetime.utcnow() + timedelta(minutes=15),
+                'exp': datetime.utcnow() + timedelta(minutes=int(current_app.config['ACCESS_TOKEN_EXPIRATION_TIME'])),
                 'type': 'access'
             },
             current_app.config['SECRET_KEY'],
@@ -108,7 +111,8 @@ def refresh():
         )
         
         return jsonify({
-            'access_token': access_token
+            'access_token': access_token,
+            'access_token_expiration_time': int(current_app.config['ACCESS_TOKEN_EXPIRATION_TIME']) * 60 * 1000
         }), 200
         
     except jwt.ExpiredSignatureError:
