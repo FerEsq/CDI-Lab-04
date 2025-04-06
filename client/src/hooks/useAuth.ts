@@ -6,7 +6,7 @@ const useAuth = () => {
     const handleLogin = async (email: string, password: string, callback: () => void) => {
         try {
             const response = await handleLoginMutation({ email, password }).unwrap();
-            if (response.token) {
+            if (response.access_token && response.refresh_token) {
                 callback();
             }
         } catch (error) {

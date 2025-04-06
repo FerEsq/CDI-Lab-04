@@ -1,6 +1,6 @@
 import { useDispatch } from 'react-redux';
 import { setAppState } from '../store/slices/appState-slice';
-import { TOKEN_COOKIE_NAME } from '../utils/constants';
+import { TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_NAME } from '../utils/constants';
 import Cookies from 'js-cookie';
 import { useRef, useState } from 'react';
 import useFiles from '../hooks/useFiles';
@@ -14,6 +14,7 @@ const Home = () => {
   const handleLogout = () => {
     dispatch(setAppState('NOT_LOGGED_IN'));
     Cookies.remove(TOKEN_COOKIE_NAME);
+    Cookies.remove(REFRESH_TOKEN_COOKIE_NAME);
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
