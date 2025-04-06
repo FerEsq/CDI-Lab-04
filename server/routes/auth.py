@@ -7,6 +7,31 @@ from utils.crypto import generate_key_pair, get_public_key_pem, get_private_key_
 
 auth_bp = Blueprint('auth', __name__)
 
+def generate_tokens(user_id):
+    # Generate access token (15 minutes expiration)
+    access_token = jwt.encode(
+        {
+            'user_id': str(user_id),
+            'exp': datetime.utcnow() + timedelta(minutes=15),
+            'type': 'access'
+        },
+        current_app.config['SECRET_KEY'],
+        algorithm='HS256'
+    )
+    
+    # Generate refresh token (7 days expiration)
+    refresh_token = jwt.encode(
+        {
+            'user_id': str(user_id),
+            'exp': datetime.utcnow() + timedelta(days=7),
+            'type': 'refresh'
+        },
+        current_app.config['SECRET_KEY'],
+        algorithm='HS256'
+    )
+    
+    return access_token, refresh_token
+
 @auth_bp.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
@@ -27,20 +52,14 @@ def register():
         'created_at': datetime.utcnow()
     }
     
-    db.users.insert_one(user)
-    token = jwt.encode(
-        {
-            'user_id': str(user['_id']),
-            'exp': datetime.utcnow() + timedelta(hours=1)
-        },
-        current_app.config['SECRET_KEY'],
-        algorithm='HS256'
-    )
+    result = db.users.insert_one(user)
+    access_token, refresh_token = generate_tokens(result.inserted_id)
     
     user.pop('private_key', None)
     return jsonify({
         'message': 'User registered successfully',
-        'token': token,
+        'access_token': access_token,
+        'refresh_token': refresh_token
     }), 201
     
 @auth_bp.route('/login', methods=['POST'])
@@ -52,13 +71,47 @@ def login():
     if not user or not check_password_hash(user['password'], data['password']):
         return jsonify({'error': 'Invalid credentials'}), 401
     
-    token = jwt.encode(
-        {
-            'user_id': str(user['_id']),
-            'exp': datetime.utcnow() + timedelta(hours=1)
-        },
-        current_app.config['SECRET_KEY'],
-        algorithm='HS256'
-    )
+    access_token, refresh_token = generate_tokens(user['_id'])
     
-    return jsonify({'token': token}), 200 
+    return jsonify({
+        'access_token': access_token,
+        'refresh_token': refresh_token
+    }), 200
+
+@auth_bp.route('/refresh', methods=['POST'])
+def refresh():
+    refresh_token = request.get_json().get('refresh_token')
+    if not refresh_token:
+        return jsonify({'error': 'Refresh token is required'}), 400
+    
+    try:
+        # Verify refresh token
+        payload = jwt.decode(
+            refresh_token,
+            current_app.config['SECRET_KEY'],
+            algorithms=['HS256']
+        )
+        
+        # Check if token is a refresh token
+        if payload.get('type') != 'refresh':
+            return jsonify({'error': 'Invalid token type'}), 401
+            
+        # Generate new access token
+        access_token = jwt.encode(
+            {
+                'user_id': payload['user_id'],
+                'exp': datetime.utcnow() + timedelta(minutes=15),
+                'type': 'access'
+            },
+            current_app.config['SECRET_KEY'],
+            algorithm='HS256'
+        )
+        
+        return jsonify({
+            'access_token': access_token
+        }), 200
+        
+    except jwt.ExpiredSignatureError:
+        return jsonify({'error': 'Refresh token has expired'}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({'error': 'Invalid refresh token'}), 401 

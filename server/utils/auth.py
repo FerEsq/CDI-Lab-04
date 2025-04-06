@@ -21,6 +21,11 @@ def token_required(f):
         try:
             # decode the token
             data = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=["HS256"])
+            
+            # Check if token is an access token
+            if data.get('type') != 'access':
+                return jsonify({'error': 'Invalid token type'}), 401
+            
             db = get_db()
             current_user = db.users.find_one({'_id': ObjectId(data['user_id'])})
             
