@@ -55,11 +55,8 @@ export const baseQueryWithReauth = async (args: any, api: any, extraOptions: any
     const expirationTime = payload.exp * 1000;
     const timeLeft = expirationTime - Date.now();
 
-    console.log("Time left: ", timeLeft, "Threshold: ", TOKEN_EXPIRATION_TIME_THRESHOLD);
-    console.log("refresh token: ", Cookies.get(REFRESH_TOKEN_COOKIE_NAME));
     if (timeLeft < TOKEN_EXPIRATION_TIME_THRESHOLD) {
       // refresh the token
-      console.log("Refreshing token");
       const refreshResult = await fetch(`${baseUrl}/auth/refresh`, {
         method: 'POST',
         headers: {
@@ -69,14 +66,12 @@ export const baseQueryWithReauth = async (args: any, api: any, extraOptions: any
       });
       if (refreshResult.ok) {
         const data = await refreshResult.json();
-        console.log("Refreshed token: ", data);
         Cookies.set(TOKEN_COOKIE_NAME, data.access_token, {
           secure: true,
           sameSite: 'strict',
           expires: new Date(Date.now() + Number(data.access_token_expiration_time)),
         });
       } else {
-        console.log("Failed to refresh token");
         Cookies.remove(TOKEN_COOKIE_NAME);
         Cookies.remove(REFRESH_TOKEN_COOKIE_NAME);
         api.dispatch(setAppState('NOT_LOGGED_IN'));
