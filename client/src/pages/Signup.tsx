@@ -29,7 +29,6 @@ const Signup = () => {
   const [isRegisterLoading, setIsRegisterLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Función para manejar el registro
   const handleRegister = async (
@@ -70,8 +69,7 @@ const Signup = () => {
   const formik = useFormik({
     initialValues: {
       email: '',
-      password: '',
-      confirmPassword: '',
+      password: ''
     },
     validationSchema: Yup.object({
       email: Yup.string()
@@ -79,10 +77,7 @@ const Signup = () => {
         .required('Campo requerido'),
       password: Yup.string()
         .min(3, 'La contraseña debe tener al menos 3 caracteres')
-        .required('Campo requerido'),
-      confirmPassword: Yup.string()
-        .oneOf([Yup.ref('password')], 'Las contraseñas deben coincidir')
-        .required('Campo requerido'),
+        .required('Campo requerido')
     }),
     onSubmit: (values) => {
       handleRegister(values.email, values.password);
@@ -108,7 +103,7 @@ const Signup = () => {
         textAlign: 'center',
         marginBottom: '24px',
         fontSize: '28px'
-      }}>Registrarse</h1>
+      }}>Crear Cuenta</h1>
       
       {error && (
         <div style={{
