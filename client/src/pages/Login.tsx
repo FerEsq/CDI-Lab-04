@@ -196,7 +196,7 @@ const Login = () => {
           
           <div style={{ textAlign: 'center', marginTop: '10px' }}>
             <a 
-              href="#" 
+              href="/signup"
               style={{ 
                 color: colors.accent,
                 textDecoration: 'none',
