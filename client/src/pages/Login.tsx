@@ -6,13 +6,13 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import useAuth from '../hooks/useAuth';
 
-// Definición de colores de la paleta
+//Definición de colores de la paleta
 const colors = {
-  primary: '#226946',    // Verde oscuro
-  secondary: '#91b4a3',  // Verde claro
-  white: '#ffffff',      // Blanco
-  dark: '#0d0b0c',       // Negro
-  accent: '#48284a'      // Púrpura
+  primary: '#226946',    //Dartmouth green
+  secondary: '#91b4a3',  //Cambridge Blue
+  white: '#ffffff',      //White
+  dark: '#0d0b0c',       //Night
+  accent: '#48284a'      //Violet (JTC)
 };
 
 const Login = () => {
