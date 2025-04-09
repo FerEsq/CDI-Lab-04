@@ -8,9 +8,10 @@ services:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: password
     ports:
-      - 27017:27017
-    volumes: # optional to preserve database after container is deleted.
+      - 0.0.0.0:27017:27017  # Exponer a todas las interfaces, explícitamente
+    volumes:
       - ./database-data:/data/db
+    command: mongod --bind_ip_all
 
   # Mongo Express Service
   mongo-express:
