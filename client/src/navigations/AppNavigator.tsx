@@ -6,6 +6,7 @@ import Home from '../pages/Home';
 import Login from '../pages/Login';
 import Signup from '../pages/Signup';
 import Files from '../pages/Files';
+import Verify from '../pages/Verify';
 import UnprotectedRoute from './components/UnprotectedRoute';
 const router = createBrowserRouter([
     {
@@ -21,6 +22,14 @@ const router = createBrowserRouter([
         element: (
             <ProtectedRoute>
                 <Files />
+            </ProtectedRoute>
+        ),
+    },
+    {
+        path: '/verify',
+        element: (
+            <ProtectedRoute>
+                <Verify />
             </ProtectedRoute>
         ),
     },

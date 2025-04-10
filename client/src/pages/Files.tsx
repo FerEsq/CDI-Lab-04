@@ -215,7 +215,7 @@ const Files = () => {
           marginBottom: '30px',
           fontSize: '28px'
         }}>
-          Mis Archivos
+          Lista de Archivos
         </h1>
         
         <div style={{
