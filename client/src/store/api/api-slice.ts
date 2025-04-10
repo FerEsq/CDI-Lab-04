@@ -4,6 +4,20 @@ import { TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_NAME, TOKEN_EXPIRATION_TIME_THR
 import { setAppState } from '../slices/appState-slice';
 import { AuthResponse, FileUploadResponse, FileVerificationResponse, LoginRequest, RegisterRequest } from './types';
 
+// Interfaz para los datos de archivo
+export interface FileItem {
+  _id: string;
+  filename: string;
+  created_at: string;
+  original_name: string;
+  is_signed: boolean;
+  mime_type: string;
+  owner_id: string;
+  signature: string | null;
+  signed_at?: string;
+  size: number;
+}
+
 // Define a service using a base URL and expected endpoints
 const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
@@ -139,6 +153,23 @@ export const apiSlice = createApi({
         body: formData,
       }),
     }),
+
+    // Nuevos endpoints agregados
+    downloadFile: builder.mutation<Blob, string>({
+      query: (fileId) => ({
+        url: `files/${fileId}/download`,
+        method: 'GET',
+        responseHandler: (response) => response.blob(),
+      }),
+    }),
+
+    getFileData: builder.query<FileItem, string>({
+      query: (fileId) => `files/${fileId}/info`,
+    }),
+
+    getAllFiles: builder.query<FileItem[], void>({
+      query: () => 'files/',
+    }),
   }),
 });
 
@@ -148,4 +179,8 @@ export const {
   useRegisterMutation,
   useUploadFileMutation,
   useVerifyFileMutation,
-} = apiSlice; 
+  useDownloadFileMutation,  // Nuevo export
+  useGetFileDataQuery,      // Nuevo export
+  useLazyGetFileDataQuery,  // Nuevo export
+  useGetAllFilesQuery,      // Nuevo export
+} = apiSlice;
