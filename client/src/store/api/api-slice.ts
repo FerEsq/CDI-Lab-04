@@ -2,34 +2,7 @@ import { createApi, fetchBaseQuery, FetchBaseQueryError } from '@reduxjs/toolkit
 import Cookies from 'js-cookie';
 import { TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_NAME, TOKEN_EXPIRATION_TIME_THRESHOLD } from '../../utils/constants';
 import { setAppState } from '../slices/appState-slice';
-
-// Define types for our API responses
-interface AuthResponse {
-  access_token: string;
-  refresh_token: string;
-  access_token_expiration_time: number;
-  refresh_token_expiration_time: number;
-  user?: {
-    id: string;
-    email: string;
-  };
-}
-
-interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-interface RegisterRequest {
-  email: string;
-  password: string;
-  name: string;
-}
-
-interface FileUploadResponse {
-  url: string;
-  filename: string;
-}
+import { AuthResponse, FileUploadResponse, FileVerificationResponse, LoginRequest, RegisterRequest } from './types';
 
 // Define a service using a base URL and expected endpoints
 const baseUrl = import.meta.env.VITE_API_BASE_URL;
@@ -50,36 +23,43 @@ const baseQuery = fetchBaseQuery({
 export const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
   // get the time left of the token
   const token = Cookies.get(TOKEN_COOKIE_NAME);
+  let timeLeft = 0;
   if (token) {
     const payload = JSON.parse(atob(token.split('.')[1]));
     const expirationTime = payload.exp * 1000;
-    const timeLeft = expirationTime - Date.now();
+    timeLeft = expirationTime - Date.now();
+  }
 
-    if (timeLeft < TOKEN_EXPIRATION_TIME_THRESHOLD) {
-      // refresh the token
-      const refreshResult = await fetch(`${baseUrl}/auth/refresh`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ refresh_token: Cookies.get(REFRESH_TOKEN_COOKIE_NAME) }),
+  console.log('timeLeft', timeLeft);
+
+  const refreshToken = Cookies.get(REFRESH_TOKEN_COOKIE_NAME);
+
+  if ((timeLeft < TOKEN_EXPIRATION_TIME_THRESHOLD) && !!refreshToken) {
+    console.log('refreshing token');
+    // refresh the token
+    const refreshResult = await fetch(`${baseUrl}/auth/refresh`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+    if (refreshResult.ok) {
+      const data = await refreshResult.json();
+      console.log('token refreshed!');
+      Cookies.set(TOKEN_COOKIE_NAME, data.access_token, {
+        secure: true,
+        sameSite: 'strict',
+        expires: new Date(Date.now() + Number(data.access_token_expiration_time)),
       });
-      if (refreshResult.ok) {
-        const data = await refreshResult.json();
-        Cookies.set(TOKEN_COOKIE_NAME, data.access_token, {
-          secure: true,
-          sameSite: 'strict',
-          expires: new Date(Date.now() + Number(data.access_token_expiration_time)),
-        });
-      } else {
-        Cookies.remove(TOKEN_COOKIE_NAME);
-        Cookies.remove(REFRESH_TOKEN_COOKIE_NAME);
-        api.dispatch(setAppState('NOT_LOGGED_IN'));
-      }
+    } else {
+      Cookies.remove(TOKEN_COOKIE_NAME);
+      Cookies.remove(REFRESH_TOKEN_COOKIE_NAME);
+      api.dispatch(setAppState('NOT_LOGGED_IN'));
     }
   }
 
-  let result = await baseQuery(args, api, extraOptions);
+  const result = await baseQuery(args, api, extraOptions);
 
   // If the response is 401, handle unauthorized access
   if ((result.error as FetchBaseQueryError)?.status === 401) {
@@ -151,6 +131,14 @@ export const apiSlice = createApi({
         body: formData,
       }),
     }),
+
+    verifyFile: builder.mutation<FileVerificationResponse, FormData>({
+      query: (formData) => ({
+        url: 'files/verify',
+        method: 'POST',
+        body: formData,
+      }),
+    }),
   }),
 });
 
@@ -159,4 +147,5 @@ export const {
   useLoginMutation,
   useRegisterMutation,
   useUploadFileMutation,
+  useVerifyFileMutation,
 } = apiSlice; 
