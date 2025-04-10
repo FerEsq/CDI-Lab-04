@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux';
 import { setAppState } from '../store/slices/appState-slice';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import axios from 'axios';
+import useAuth from '../hooks/useAuth';
 
 //Definición de colores de la paleta
 const colors = {
@@ -15,54 +15,22 @@ const colors = {
   accent: '#48284a'      //Violet (JTC)
 };
 
-const API_URL = 'http://localhost:3000/api';
-
-// Tipo de respuesta de la API de autenticación
-type AuthResponse = {
-  access_token: string;
-  refresh_token: string;
-};
-
 const Signup = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [isRegisterLoading, setIsRegisterLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { handleRegister, isRegisterLoading, error } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
 
   // Función para manejar el registro
-  const handleRegister = async (
-    email: string, 
-    password: string
-  ) => {
-    setIsRegisterLoading(true);
-    setError(null);
-    
-    try {
-      const response = await axios.post<AuthResponse>(
-        `${API_URL}/auth/register`, 
-        { email, password }
-      );
-      
-      // Guardar tokens en localStorage
-      localStorage.setItem('access_token', response.data.access_token);
-      localStorage.setItem('refresh_token', response.data.refresh_token);
-      
-      // Establecer el token en el header por defecto para futuras peticiones
-      axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.access_token}`;
-      
-      // Navegar a la página principal después del registro exitoso
-      dispatch(setAppState('LOGGED_IN'));
-      navigate('/', { replace: true });
-    } catch (err) {
-      if (axios.isAxiosError(err) && err.response) {
-        setError(err.response.data.message || 'Error al registrarse');
-      } else {
-        setError('Error de conexión. Intente más tarde.');
+  const onRegister = (email: string, password: string) => {
+    handleRegister(
+      email, 
+      password, 
+      () => {
+        dispatch(setAppState('LOGGED_IN'));
+        navigate('/', { replace: true });
       }
-    } finally {
-      setIsRegisterLoading(false);
-    }
+    );
   };
 
   // Formik
@@ -80,7 +48,7 @@ const Signup = () => {
         .required('Campo requerido')
     }),
     onSubmit: (values) => {
-      handleRegister(values.email, values.password);
+      onRegister(values.email, values.password);
     },
   });
 

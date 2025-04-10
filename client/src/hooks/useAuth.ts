@@ -1,22 +1,49 @@
-import { useLoginMutation } from "../store/api/api-slice";
+import { useLoginMutation, useRegisterMutation } from "../store/api/api-slice";
+import { useState } from "react";
 
 const useAuth = () => {
-    const [handleLoginMutation, { isLoading: isLoginLoading }] = useLoginMutation()
+    const [handleLoginMutation, { isLoading: isLoginLoading }] = useLoginMutation();
+    const [handleRegisterMutation, { isLoading: isRegisterLoading }] = useRegisterMutation();
+    const [error, setError] = useState<string | null>(null);
 
     const handleLogin = async (email: string, password: string, callback: () => void) => {
+        setError(null);
         try {
             const response = await handleLoginMutation({ email, password }).unwrap();
             if (response.access_token && response.refresh_token) {
+                // Guardar tokens en localStorage - CORREGIDO: sin .data
+                localStorage.setItem('access_token', response.access_token);
+                localStorage.setItem('refresh_token', response.refresh_token);
                 callback();
             }
-        } catch (error) {
-            console.error(error);
+        } catch (err: any) {
+            setError(err.data?.message || 'Error al iniciar sesión');
+            console.error(err);
+        }
+    }
+
+    const handleRegister = async (email: string, password: string, callback: () => void) => {
+        setError(null);
+        try {
+            const response = await handleRegisterMutation({ email, password }).unwrap();
+            if (response.access_token && response.refresh_token) {
+                // Guardar tokens en localStorage
+                localStorage.setItem('access_token', response.access_token);
+                localStorage.setItem('refresh_token', response.refresh_token);
+                callback();
+            }
+        } catch (err: any) {
+            setError(err.data?.message || 'Error al registrarse');
+            console.error(err);
         }
     }
 
     return { 
-        handleLogin, 
-        isLoginLoading
+        handleLogin,
+        handleRegister, 
+        isLoginLoading,
+        isRegisterLoading,
+        error
     };
 }
 
