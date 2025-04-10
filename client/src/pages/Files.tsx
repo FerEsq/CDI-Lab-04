@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useState } from 'react';
 import Swal from 'sweetalert2';
 import Header from '../components/Header';
 import { useGetAllFilesQuery } from '../store/api/api-slice';
@@ -14,8 +14,9 @@ const colors = {
 };
 
 const Files = () => {
-  const { data: files = [], isLoading, error, refetch } = useGetAllFilesQuery();
+  const { data: files = [], isLoading, error, refetch, isFetching } = useGetAllFilesQuery();
   const { handleFileDownload, isDownloadLoading } = useFiles();
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Formatear el tamaño del archivo
   const formatFileSize = (bytes: number): string => {
@@ -23,6 +24,13 @@ const Files = () => {
     else if (bytes < 1048576) return (bytes / 1024).toFixed(2) + ' KB';
     else if (bytes < 1073741824) return (bytes / 1048576).toFixed(2) + ' MB';
     else return (bytes / 1073741824).toFixed(2) + ' GB';
+  };
+
+  // Función para actualizar la lista
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refetch();
+    setIsRefreshing(false);
   };
 
   // Descargar archivo usando el hook useFiles
@@ -38,7 +46,7 @@ const Files = () => {
         }
       });
       
-      // Preferir el nombre original si está disponible
+      // Descargar el archivo con su nombre original
       const downloadFilename = originalName || filename;
       
       // Usar el hook para manejar la descarga pasando el nombre del archivo
@@ -73,6 +81,9 @@ const Files = () => {
       });
     }
   };
+
+  // Determinar si se debe mostrar el estado de carga
+  const showLoading = isLoading || isRefreshing || isFetching;
 
   return (
     <div style={{ 
@@ -114,7 +125,8 @@ const Files = () => {
             marginBottom: '20px'
           }}>
             <button 
-              onClick={() => refetch()}
+              onClick={handleRefresh}
+              disabled={showLoading}
               style={{
                 backgroundColor: colors.secondary,
                 color: colors.dark,
@@ -123,14 +135,15 @@ const Files = () => {
                 borderRadius: '4px',
                 fontSize: '14px',
                 fontWeight: 'bold',
-                cursor: 'pointer'
+                cursor: showLoading ? 'not-allowed' : 'pointer',
+                opacity: showLoading ? 0.7 : 1
               }}
             >
-              Actualizar lista
+              {showLoading ? 'Actualizando...' : 'Actualizar lista'}
             </button>
           </div>
           
-          {isLoading ? (
+          {showLoading ? (
             <div style={{ textAlign: 'center', padding: '30px' }}>
               <p style={{ color: colors.primary }}>Cargando archivos...</p>
             </div>
@@ -138,7 +151,7 @@ const Files = () => {
             <div style={{ textAlign: 'center', padding: '30px' }}>
               <p style={{ color: 'red' }}>Error al cargar los archivos. Por favor, inténtalo de nuevo.</p>
               <button 
-                onClick={() => refetch()}
+                onClick={handleRefresh}
                 style={{
                   backgroundColor: colors.primary,
                   color: colors.white,
