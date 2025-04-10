@@ -11,9 +11,6 @@ const useAuth = () => {
         try {
             const response = await handleLoginMutation({ email, password }).unwrap();
             if (response.access_token && response.refresh_token) {
-                // Guardar tokens en localStorage - CORREGIDO: sin .data
-                localStorage.setItem('access_token', response.access_token);
-                localStorage.setItem('refresh_token', response.refresh_token);
                 callback();
             }
         } catch (err: any) {
@@ -27,9 +24,6 @@ const useAuth = () => {
         try {
             const response = await handleRegisterMutation({ email, password }).unwrap();
             if (response.access_token && response.refresh_token) {
-                // Guardar tokens en localStorage
-                localStorage.setItem('access_token', response.access_token);
-                localStorage.setItem('refresh_token', response.refresh_token);
                 callback();
             }
         } catch (err: any) {
