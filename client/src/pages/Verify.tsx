@@ -1,10 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
-import { useDispatch } from 'react-redux';
-import Cookies from 'js-cookie';
 import Swal from 'sweetalert2';
 import Header from '../components/Header';
-import { TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_NAME } from '../utils/constants';
-import { setAppState } from '../store/slices/appState-slice';
+import useFiles from '../hooks/useFiles';
 
 // Definición de colores de la paleta
 const colors = {
@@ -16,20 +13,14 @@ const colors = {
 };
 
 const Verify = () => {
-  const dispatch = useDispatch();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
+  const { handleFileVerification, verifyError } = useFiles();
   const [verificationResult, setVerificationResult] = useState<{
     isVerified: boolean;
     message: string;
   } | null>(null);
-
-  const handleLogout = () => {
-    dispatch(setAppState('NOT_LOGGED_IN'));
-    Cookies.remove(TOKEN_COOKIE_NAME);
-    Cookies.remove(REFRESH_TOKEN_COOKIE_NAME);
-  };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -46,20 +37,16 @@ const Verify = () => {
     setIsVerifying(true);
     
     try {
-      const formData = new FormData();
-      formData.append('file', selectedFile);
 
-      const token = Cookies.get(TOKEN_COOKIE_NAME);
-      
-      const response = await fetch('http://localhost:3000/api/files/verify', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      });
+      const data = await handleFileVerification(selectedFile);
 
-      const data = await response.json();
+      if (!data) {
+        setVerificationResult({
+          isVerified: false,
+          message: 'No se pudo verificar la firma del archivo'
+        });
+        return;
+      }
       
       // Manejo de los 3 casos de respuesta posibles
       if (data.is_valid === true) {
@@ -74,11 +61,22 @@ const Verify = () => {
           isVerified: false,
           message: data.message || 'La firma del archivo es inválida'
         });
-      } else if (data.error) {
+      } else if (verifyError) {
         // Caso 2: El archivo no está firmado
+        let errorMessage = 'El archivo no está firmado';
+        
+        if ('data' in verifyError) {
+          // Si es un FetchBaseQueryError
+          const errorData = verifyError.data as { message?: string };
+          errorMessage = errorData.message || errorMessage;
+        } else if ('message' in verifyError) {
+          // Si es un SerializedError
+          errorMessage = verifyError.message || errorMessage;
+        }
+        
         setVerificationResult({
           isVerified: false,
-          message: data.error || 'El archivo no está firmado'
+          message: errorMessage
         });
       } else {
         // Caso de error general

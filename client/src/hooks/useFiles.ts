@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { useUploadFileMutation } from "../store/api/api-slice";
+import { useUploadFileMutation, useVerifyFileMutation } from "../store/api/api-slice";
 
 const useFiles = () => {
     const [uploadSuccess, setUploadSuccess] = useState(false);
+    const [verificationSuccess, setVerificationSuccess] = useState(false);
     const [uploadFile, { isLoading: isUploadLoading }] = useUploadFileMutation();
+    const [verifyFile, { isLoading: isVerifyLoading, error: verifyError }] = useVerifyFileMutation();
 
     const handleFileUpload = async (file: File, sign?: boolean) => {
         setUploadSuccess(false);
@@ -23,6 +25,23 @@ const useFiles = () => {
         }
     };
 
+    const handleFileVerification = async (file: File) => {
+        setVerificationSuccess(false);
+        
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await verifyFile(formData).unwrap();
+            setVerificationSuccess(true);
+            return response;
+        } catch (error) {
+            console.error('Error al verificar el archivo:', error);
+            setVerificationSuccess(false);
+        }
+    };
+
+
     const resetUploadState = () => {
         setUploadSuccess(false);
     };
@@ -31,7 +50,11 @@ const useFiles = () => {
         handleFileUpload,
         isUploadLoading,
         uploadSuccess,
-        resetUploadState
+        resetUploadState,
+        handleFileVerification,
+        isVerifyLoading,
+        verificationSuccess,
+        verifyError
     };
 };
 
