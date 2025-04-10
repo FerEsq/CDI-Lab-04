@@ -33,7 +33,7 @@ const Signup = () => {
     );
   };
 
-  // Formik
+  // Formik para el form
   const formik = useFormik({
     initialValues: {
       email: '',

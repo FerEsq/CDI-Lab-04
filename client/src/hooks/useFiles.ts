@@ -73,7 +73,7 @@ const useFiles = () => {
         try {
             console.log('Iniciando descarga del archivo con ID:', fileId);
             
-            // Primero intentamos obtener la información del archivo si no tenemos el nombre original
+            // Si no tenemos el nombre original, intentamos obtener la info del archivo 
             let filename = originalFilename;
             if (!filename) {
                 try {

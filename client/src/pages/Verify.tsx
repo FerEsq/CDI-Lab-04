@@ -96,7 +96,7 @@ const Verify = () => {
     }
   };
 
-  // Resetear el formulario
+  // Resetear el form
   const resetForm = () => {
     setSelectedFile(null);
     setVerificationResult(null);
@@ -105,13 +105,13 @@ const Verify = () => {
     }
   };
 
-  // Efecto para mostrar la alerta cuando se completa la verificación
+  // Alerta para cuando se completa la verificación
   useEffect(() => {
     if (verificationResult) {
       let iconType: 'success' | 'error' | 'warning' = verificationResult.isVerified ? 'success' : 'error';
       let alertTitle = verificationResult.isVerified ? '¡Verificado!' : 'No Verificado';
       
-      // Si el mensaje contiene "no está firmado", cambiamos el icono a warning
+      // Cambiar icono a warning (no está firmado)
       if (verificationResult.message.includes('no está firmado')) {
         iconType = 'warning';
         alertTitle = 'Archivo Sin Firma';

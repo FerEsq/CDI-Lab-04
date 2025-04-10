@@ -41,6 +41,47 @@ Este laboratorio busca desarrollar una aplicación que permita a los usuarios re
 ## 📐 Diagrama de Arquitectura
 ![Lab4](https://github.com/user-attachments/assets/67e19bfd-cd89-44f7-9372-1ea7956d5402)
 
+## 💻 Instrucciones de Ejecución
+### Clonar el repositorio
+En la carpeta de su preferencia, abrir una terminal y ejecutar el comando:
+```bash
+gh repo clone FerEsq/CDI-Lab-04
+```
+
+### Contenedor de Docker 
+En la carpeta de raiz, abrir una terminal y ejecutar el comando:
+```bash
+cd server
+```
+Luego, ejecuta el comando para levantar el contenedor:
+```bash
+docker-compose up --build
+```
+
+### Backend
+En la misma terminal de la carpeta `server`,  ejecutar el comando:
+```bash
+python app.py
+```
+Toma en cuenta que para poder ejecutar el comando deberás tener alguna versión de [Python][Python-url] instalada.
+
+### Frontend
+En la misma terminal de la carpeta `server`,  ejecutar los comandos:
+```bash
+cd ..
+```
+```bash
+cd client
+```
+Luego, ejecuta el comando para instalar las dependencias necesarias:
+```bash
+yarn install
+```
+Finalmente ejecuta el comando para iniciar el ambiente de desarrollo:
+```bash
+yarn dev
+```
+
 <!-- MARKDOWN LINKS & IMAGES -->
 [Python]: https://img.shields.io/badge/Python-4B8BBE?style=for-the-badge&logo=python&logoColor=white
 [Python-url]: https://www.python.org

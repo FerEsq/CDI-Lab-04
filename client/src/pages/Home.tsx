@@ -47,7 +47,7 @@ const Home = () => {
     }
   };
 
-  // Reiniciar el formulario
+  // Reiniciar el form
   const resetForm = () => {
     setSelectedFile(null);
     setSign(false);
@@ -59,7 +59,7 @@ const Home = () => {
     resetUploadState();
   };
 
-  // Efecto para mostrar la alerta cuando la subida es exitosa
+  // Alerta de cuando la subida es exitosa
   useEffect(() => {
     if (uploadSuccess) {
       Swal.fire({
