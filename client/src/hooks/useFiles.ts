@@ -67,11 +67,32 @@ const useFiles = () => {
         }
     };
 
-    const handleFileDownload = async (fileId: string) => {
+    const handleFileDownload = async (fileId: string, originalFilename?: string) => {
         setDownloadSuccess(false);
         
         try {
             console.log('Iniciando descarga del archivo con ID:', fileId);
+            
+            // Primero intentamos obtener la información del archivo si no tenemos el nombre original
+            let filename = originalFilename;
+            if (!filename) {
+                try {
+                    const fileInfoResult = await getFileData(fileId);
+                    if ('data' in fileInfoResult) {
+                        filename = fileInfoResult.data.original_name || fileInfoResult.data.filename;
+                    }
+                } catch (err) {
+                    console.warn('No se pudo obtener la información del archivo para el nombre:', err);
+                }
+            }
+            
+            // Si aún no tenemos nombre, usamos uno por defecto
+            if (!filename) {
+                filename = `file-${fileId}`;
+            }
+            
+            console.log('Nombre de archivo para descargar:', filename);
+            
             const result = await downloadFile(fileId);
             
             if ('data' in result) {
@@ -80,17 +101,6 @@ const useFiles = () => {
                 // Crear un objeto URL para el blob recibido
                 const blob = result.data;
                 const url = window.URL.createObjectURL(blob);
-                
-                // Obtener el nombre del archivo de la respuesta HTTP si está disponible
-                const contentDisposition = result.meta?.response?.headers.get('content-disposition');
-                let filename = `file-${fileId}`;
-                
-                if (contentDisposition) {
-                    const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-                    if (filenameMatch && filenameMatch[1]) {
-                        filename = filenameMatch[1].replace(/['"]/g, '');
-                    }
-                }
                 
                 // Crear un elemento ancla temporal para descargar el archivo
                 const a = document.createElement('a');

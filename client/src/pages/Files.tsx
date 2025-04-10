@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import Swal from 'sweetalert2';
 import Header from '../components/Header';
 import { useGetAllFilesQuery } from '../store/api/api-slice';
@@ -25,7 +26,7 @@ const Files = () => {
   };
 
   // Descargar archivo usando el hook useFiles
-  const downloadFile = async (fileId: string, filename: string) => {
+  const downloadFile = async (fileId: string, filename: string, originalName: string) => {
     try {
       // Mostrar indicador de carga
       Swal.fire({
@@ -37,8 +38,11 @@ const Files = () => {
         }
       });
       
-      // Usar el hook para manejar la descarga
-      const result = await handleFileDownload(fileId);
+      // Preferir el nombre original si está disponible
+      const downloadFilename = originalName || filename;
+      
+      // Usar el hook para manejar la descarga pasando el nombre del archivo
+      const result = await handleFileDownload(fileId, downloadFilename);
       
       if (!result) {
         throw new Error('Error al descargar el archivo');
@@ -49,7 +53,7 @@ const Files = () => {
       // Notificar descarga exitosa
       Swal.fire({
         title: '¡Descarga completada!',
-        text: `El archivo ${filename} se ha descargado correctamente.`,
+        text: `El archivo ${downloadFilename} se ha descargado correctamente.`,
         icon: 'success',
         confirmButtonText: 'Aceptar',
         confirmButtonColor: colors.primary
@@ -196,7 +200,7 @@ const Files = () => {
                         textAlign: 'center'
                       }}>
                         <button 
-                          onClick={() => downloadFile(file._id, file.original_name || file.filename)}
+                          onClick={() => downloadFile(file._id, file.filename, file.original_name)}
                           disabled={isDownloadLoading}
                           style={{
                             backgroundColor: colors.primary,
