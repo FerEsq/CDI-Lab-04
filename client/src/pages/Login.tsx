@@ -42,7 +42,13 @@ const Login = () => {
     },
     validationSchema: Yup.object({
       email: Yup.string().email('Correo electrónico inválido').required('Campo requerido'),
-      password: Yup.string().required('Campo requerido'),
+      password: Yup.string()
+        .required('Campo requerido')
+        .min(8, 'La contraseña debe tener al menos 8 caracteres')
+        .matches(/[A-Z]/, 'La contraseña debe contener al menos una letra mayúscula')
+        .matches(/[a-z]/, 'La contraseña debe contener al menos una letra minúscula')
+        .matches(/[0-9]/, 'La contraseña debe contener al menos un número')
+        .matches(/[^A-Za-z0-9]/, 'La contraseña debe contener al menos un carácter especial'),
     }),
     onSubmit: (values) => {
       onLogin(values.email, values.password);
