@@ -28,19 +28,6 @@ const baseQuery = fetchBaseQuery({
   },
 });
 
-// Helper function to check if we're authenticated by making a test request
-const checkAuthenticationStatus = async (): Promise<boolean> => {
-  try {
-    const response = await fetch(`${baseUrl}/files/`, {
-      method: 'GET',
-      credentials: 'include',
-    });
-    return response.ok;
-  } catch {
-    return false;
-  }
-};
-
 // Create a custom base query that handles 401 errors
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
