@@ -3,6 +3,7 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 from datetime import timedelta
 import os
+import secrets
 
 # Load environment variables
 load_dotenv()
@@ -26,6 +27,45 @@ def create_app():
         SESSION_COOKIE_SAMESITE='Strict', # CSRF protection
         PERMANENT_SESSION_LIFETIME=timedelta(hours=1)
     )
+
+    # Security headers to prevent clickjacking and other attacks
+    @app.after_request
+    def set_security_headers(response):
+        # Prevent clickjacking attacks
+        response.headers['X-Frame-Options'] = 'DENY'
+        
+        # Content Security Policy - Complete and secure configuration
+        # Include all necessary directives with proper fallbacks
+        csp_policy = (
+            "default-src 'self'; "
+            "script-src 'self'; "
+            "style-src 'self'; "
+            "img-src 'self' data: blob:; "
+            "font-src 'self' data:; "
+            "connect-src 'self' http://localhost:* https://localhost:*; "
+            "frame-src 'none'; "
+            "frame-ancestors 'none'; "
+            "object-src 'none'; "
+            "base-uri 'self'; "
+            "form-action 'self'; "
+            "manifest-src 'self';"
+        )
+        
+        response.headers['Content-Security-Policy'] = csp_policy
+        
+        # Prevent MIME type sniffing
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        
+        # Enable XSS protection
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+        
+        # Referrer Policy
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        
+        # Remove server information
+        response.headers['Server'] = 'WebServer'
+        
+        return response
 
     if not os.path.exists(app.config['TEMP_FOLDER']):
         os.makedirs(app.config['TEMP_FOLDER'])
