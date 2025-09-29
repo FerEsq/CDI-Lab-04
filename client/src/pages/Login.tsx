@@ -1,7 +1,5 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { setAppState } from '../store/slices/appState-slice';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import useAuth from '../hooks/useAuth';
@@ -16,7 +14,6 @@ const colors = {
 };
 
 const Login = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
   const { handleLogin, isLoginLoading } = useAuth();
@@ -28,7 +25,6 @@ const Login = () => {
       email, 
       password, 
       () => {
-        dispatch(setAppState('LOGGED_IN'));
         navigate(from, { replace: true });
       }
     );

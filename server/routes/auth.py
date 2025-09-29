@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, current_app
+from flask import Blueprint, request, jsonify, current_app, make_response
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 from datetime import datetime, timedelta
@@ -55,12 +55,38 @@ def register():
     result = db.users.insert_one(user)
     access_token, refresh_token = generate_tokens(result.inserted_id)
     
-    user.pop('private_key', None)
-    return jsonify({
+    # Create response with user data (excluding sensitive information)
+    response_data = {
         'message': 'User registered successfully',
-        'access_token': access_token,
-        'refresh_token': refresh_token
-    }), 201
+        'user': {
+            'id': str(result.inserted_id),
+            'email': data['email']
+        }
+    }
+    
+    # Create response object
+    response = make_response(jsonify(response_data), 201)
+    
+    # Set HTTP-only cookies for tokens
+    response.set_cookie(
+        'access_token',
+        access_token,
+        httponly=True,
+        secure=False,  # Only send over HTTPS
+        samesite='Strict',
+        max_age=int(current_app.config['ACCESS_TOKEN_EXPIRATION_TIME']) * 60
+    )
+    
+    response.set_cookie(
+        'refresh_token',
+        refresh_token,
+        httponly=True,
+        secure=False,  # Only send over HTTPS
+        samesite='Strict',
+        max_age=int(current_app.config['REFRESH_TOKEN_EXPIRATION_TIME']) * 24 * 60 * 60
+    )
+    
+    return response
     
 @auth_bp.route('/login', methods=['POST'])
 def login():
@@ -73,17 +99,43 @@ def login():
     
     access_token, refresh_token = generate_tokens(user['_id'])
     
-    return jsonify({
-        'access_token': access_token,
-        'access_token_expiration_time': int(current_app.config['ACCESS_TOKEN_EXPIRATION_TIME']) * 60 * 1000,
-        'refresh_token': refresh_token,
-        'refresh_token_expiration_time': int(current_app.config['REFRESH_TOKEN_EXPIRATION_TIME']) * 24 * 60 * 60 * 1000
-    }), 200
+    # Create response with user data (excluding sensitive information)
+    response_data = {
+        'message': 'Login successful',
+        'user': {
+            'id': str(user['_id']),
+            'email': user['email']
+        }
+    }
+    
+    # Create response object
+    response = make_response(jsonify(response_data), 200)
+    
+    # Set HTTP-only cookies for tokens
+    response.set_cookie(
+        'access_token',
+        access_token,
+        httponly=True,
+        secure=True,  # Only send over HTTPS
+        samesite='Strict',
+        max_age=int(current_app.config['ACCESS_TOKEN_EXPIRATION_TIME']) * 60
+    )
+    
+    response.set_cookie(
+        'refresh_token',
+        refresh_token,
+        httponly=True,
+        secure=True,  # Only send over HTTPS
+        samesite='Strict',
+        max_age=int(current_app.config['REFRESH_TOKEN_EXPIRATION_TIME']) * 24 * 60 * 60
+    )
+    
+    return response
 
 @auth_bp.route('/refresh', methods=['POST'])
 def refresh():
-    data = request.get_json()
-    refresh_token = data['refresh_token']
+    # Get refresh token from cookies instead of JSON body
+    refresh_token = request.cookies.get('refresh_token')
     if not refresh_token:
         return jsonify({'error': 'Refresh token is required'}), 400
     
@@ -110,12 +162,56 @@ def refresh():
             algorithm='HS256'
         )
         
-        return jsonify({
-            'access_token': access_token,
-            'access_token_expiration_time': int(current_app.config['ACCESS_TOKEN_EXPIRATION_TIME']) * 60 * 1000
-        }), 200
+        # Create response
+        response_data = {
+            'message': 'Token refreshed successfully'
+        }
+        
+        response = make_response(jsonify(response_data), 200)
+        
+        # Set new access token cookie
+        response.set_cookie(
+            'access_token',
+            access_token,
+            httponly=True,
+            secure=True,
+            samesite='Strict',
+            max_age=int(current_app.config['ACCESS_TOKEN_EXPIRATION_TIME']) * 60
+        )
+        
+        return response
         
     except jwt.ExpiredSignatureError:
         return jsonify({'error': 'Refresh token has expired'}), 401
     except jwt.InvalidTokenError:
-        return jsonify({'error': 'Invalid refresh token'}), 401 
+        return jsonify({'error': 'Invalid refresh token'}), 401
+
+@auth_bp.route('/logout', methods=['POST'])
+def logout():
+    # Create response
+    response_data = {
+        'message': 'Logged out successfully'
+    }
+    
+    response = make_response(jsonify(response_data), 200)
+    
+    # Clear cookies by setting them to expire immediately
+    response.set_cookie(
+        'access_token',
+        '',
+        httponly=True,
+        secure=True,
+        samesite='Strict',
+        max_age=0
+    )
+    
+    response.set_cookie(
+        'refresh_token',
+        '',
+        httponly=True,
+        secure=True,
+        samesite='Strict',
+        max_age=0
+    )
+    
+    return response 

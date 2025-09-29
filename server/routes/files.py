@@ -14,6 +14,7 @@ files_bp = Blueprint('files', __name__)
 @files_bp.route('/', methods=['GET'])
 @token_required
 def get_files(current_user):
+    print('current_user', current_user)
     db = get_db()
     files = list(db.files.find({}, {'path': 0}))
     
@@ -39,12 +40,13 @@ def save_file(current_user):
     filename = secure_filename(file.filename)
     file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
 
+    current_file = db.files.find_one({'filename': filename})
     # check if file name is already in the database
-    if db.files.find_one({'filename': filename}):
+    if current_file is not None:
         # delete the file from the upload folder
         os.remove(file_path)
         # delete the file from the database
-        db.files.delete_one({'_id': ObjectId(file_doc['_id'])})
+        db.files.delete_one({'_id': ObjectId(current_file['_id'])})
 
     file.save(file_path)
     

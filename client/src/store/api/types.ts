@@ -1,9 +1,6 @@
 export interface AuthResponse {
-	access_token: string;
-	refresh_token: string;
-	access_token_expiration_time: number;
-	refresh_token_expiration_time: number;
-	user?: {
+	message: string;
+	user: {
 		id: string;
 		email: string;
 	};

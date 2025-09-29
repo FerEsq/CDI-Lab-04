@@ -1,8 +1,7 @@
-import { useDispatch } from 'react-redux';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import useAuth from '../hooks/useAuth';
 import { setAppState } from '../store/slices/appState-slice';
-import Cookies from 'js-cookie';
-import { TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_NAME } from '../utils/constants';
+import { useDispatch } from 'react-redux';
 
 //Definición de colores de la paleta
 const colors = {
@@ -14,12 +13,17 @@ const colors = {
 };
 
 const Header = () => {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { handleLogout, isLogoutLoading } = useAuth();
 
-  const handleLogout = () => {
-    dispatch(setAppState('NOT_LOGGED_IN'));
-    Cookies.remove(TOKEN_COOKIE_NAME);
-    Cookies.remove(REFRESH_TOKEN_COOKIE_NAME);
+  const onLogout = async () => {
+    await handleLogout(() => {
+      dispatch(setAppState('NOT_LOGGED_IN'));
+      navigate('/login');
+      // reload the page
+      window.location.reload();
+    });
   };
 
   return (
@@ -82,7 +86,8 @@ const Header = () => {
 
         {/* Botón de cerrar sesión */}
         <button 
-          onClick={handleLogout}
+          onClick={onLogout}
+          disabled={isLogoutLoading}
           style={{
             backgroundColor: colors.white,
             color: colors.primary,
@@ -91,11 +96,12 @@ const Header = () => {
             padding: '6px 18px',
             fontSize: '14px',
             fontWeight: 'bold',
-            cursor: 'pointer',
-            outline: 'none'
+            cursor: isLogoutLoading ? 'not-allowed' : 'pointer',
+            outline: 'none',
+            opacity: isLogoutLoading ? 0.7 : 1
           }}
         >
-          Cerrar Sesión
+          {isLogoutLoading ? 'Cerrando...' : 'Cerrar Sesión'}
         </button>
       </div>
     </header>

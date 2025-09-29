@@ -10,11 +10,14 @@ def token_required(f):
     def decorated(*args, **kwargs):
         token = None
         
-        # get the token from the header
-        if 'Authorization' in request.headers:
+        # Try to get token from cookies first (preferred method)
+        token = request.cookies.get('access_token')
+        
+        # Fallback to Authorization header for backward compatibility
+        if not token and 'Authorization' in request.headers:
             token = request.headers['Authorization'].split(" ")[1]
         
-        # if the token is not in the header, return an error
+        # if the token is not found, return an error
         if not token:
             return jsonify({'error': 'Token is missing'}), 401
         
@@ -28,6 +31,10 @@ def token_required(f):
             
             db = get_db()
             current_user = db.users.find_one({'_id': ObjectId(data['user_id'])})
+
+            # remove sensitive data
+            current_user.pop('private_key', None)
+            current_user.pop('password', None)
             
             # if the user is not found, return an error
             if not current_user:

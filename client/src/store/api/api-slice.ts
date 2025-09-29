@@ -1,6 +1,4 @@
 import { createApi, fetchBaseQuery, FetchBaseQueryError } from '@reduxjs/toolkit/query/react';
-import Cookies from 'js-cookie';
-import { TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_NAME, TOKEN_EXPIRATION_TIME_THRESHOLD } from '../../utils/constants';
 import { setAppState } from '../slices/appState-slice';
 import { AuthResponse, FileUploadResponse, FileVerificationResponse, LoginRequest, RegisterRequest } from './types';
 
@@ -23,64 +21,53 @@ const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
 const baseQuery = fetchBaseQuery({ 
   baseUrl: baseUrl,
-  prepareHeaders: (headers, { getState: _ }) => {
-    // Get token from cookies
-    const token = Cookies.get(TOKEN_COOKIE_NAME);
-    if (token) {
-      headers.set('authorization', `Bearer ${token}`);
-    }
+  credentials: 'include', // Include cookies in requests
+  prepareHeaders: (headers) => {
+    // No need to manually set authorization header since we're using HTTP-only cookies
     return headers;
   },
 });
 
-// Create a custom base query that handles 401 errors
-export const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
-  // get the time left of the token
-  const token = Cookies.get(TOKEN_COOKIE_NAME);
-  let timeLeft = 0;
-  if (token) {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    const expirationTime = payload.exp * 1000;
-    timeLeft = expirationTime - Date.now();
+// Helper function to check if we're authenticated by making a test request
+const checkAuthenticationStatus = async (): Promise<boolean> => {
+  try {
+    const response = await fetch(`${baseUrl}/files/`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+    return response.ok;
+  } catch {
+    return false;
   }
+};
 
-  console.log('timeLeft', timeLeft);
+// Create a custom base query that handles 401 errors
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
+  const result = await baseQuery(args, api, extraOptions);
 
-  const refreshToken = Cookies.get(REFRESH_TOKEN_COOKIE_NAME);
-
-  if ((timeLeft < TOKEN_EXPIRATION_TIME_THRESHOLD) && !!refreshToken) {
-    console.log('refreshing token');
-    // refresh the token
+  // If the response is 401, try to refresh the token
+  if ((result.error as FetchBaseQueryError)?.status === 401) {
+    console.log('Token expired, attempting refresh...');
+    
+    // Try to refresh the token using the refresh endpoint
     const refreshResult = await fetch(`${baseUrl}/auth/refresh`, {
       method: 'POST',
+      credentials: 'include', // Include cookies
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ refresh_token: refreshToken }),
     });
+    
     if (refreshResult.ok) {
-      const data = await refreshResult.json();
-      console.log('token refreshed!');
-      Cookies.set(TOKEN_COOKIE_NAME, data.access_token, {
-        secure: true,
-        sameSite: 'strict',
-        expires: new Date(Date.now() + Number(data.access_token_expiration_time)),
-      });
+      console.log('Token refreshed successfully!');
+      // Retry the original request
+      return baseQuery(args, api, extraOptions);
     } else {
-      Cookies.remove(TOKEN_COOKIE_NAME);
-      Cookies.remove(REFRESH_TOKEN_COOKIE_NAME);
+      console.log('Refresh failed, logging out...');
+      // Update app state to logged out
       api.dispatch(setAppState('NOT_LOGGED_IN'));
     }
-  }
-
-  const result = await baseQuery(args, api, extraOptions);
-
-  // If the response is 401, handle unauthorized access
-  if ((result.error as FetchBaseQueryError)?.status === 401) {
-    // Remove the token
-    Cookies.remove(TOKEN_COOKIE_NAME);
-    // Update app state to logged out
-    api.dispatch(setAppState('NOT_LOGGED_IN'));
   }
 
   return result;
@@ -96,22 +83,17 @@ export const apiSlice = createApi({
         url: 'auth/login',
         method: 'POST',
         body: credentials,
+        credentials: 'include', // Include cookies in response
       }),
       async onQueryStarted(_arg, { queryFulfilled }) {
         try {
-          const { data } = await queryFulfilled;
-          // Store tokens in cookies
-          Cookies.set(TOKEN_COOKIE_NAME, data.access_token, {
-            secure: true,
-            sameSite: 'strict',
-            expires: new Date(Date.now() + Number(data.access_token_expiration_time)),
-          });
-          Cookies.set(REFRESH_TOKEN_COOKIE_NAME, data.refresh_token, {
-            secure: true,
-            sameSite: 'strict',
-            expires: new Date(Date.now() + Number(data.refresh_token_expiration_time)),
-          });
-        } catch {}
+          const result = await queryFulfilled;
+          // HTTP-only cookies are not accessible from JavaScript (this is correct for security)
+          // The cookies are automatically sent with subsequent requests
+          console.log('Login successful, HTTP-only cookies set by server:', result.data);
+        } catch (error) {
+          console.error('Login failed:', error);
+        }
       },
     }),
     register: builder.mutation<AuthResponse, RegisterRequest>({
@@ -119,22 +101,46 @@ export const apiSlice = createApi({
         url: 'auth/register',
         method: 'POST',
         body: userData,
+        credentials: 'include', // Include cookies in response
       }),
       async onQueryStarted(_arg, { queryFulfilled }) {
         try {
-          const { data } = await queryFulfilled;
-          Cookies.set(TOKEN_COOKIE_NAME, data.access_token, {
-            secure: true,
-            sameSite: 'strict',
-            expires: new Date(Date.now() + Number(data.access_token_expiration_time)),
-          });
-          Cookies.set(REFRESH_TOKEN_COOKIE_NAME, data.refresh_token, {
-            secure: true,
-            sameSite: 'strict',
-            expires: new Date(Date.now() + Number(data.refresh_token_expiration_time)),
-          });
-        } catch {}
+          await queryFulfilled;
+          // Tokens are automatically set as HTTP-only cookies by the server
+          console.log('Registration successful, tokens set as HTTP-only cookies');
+        } catch (error) {
+          console.error('Registration failed:', error);
+        }
       },
+    }),
+    
+    // Logout endpoint
+    logout: builder.mutation<{ message: string }, void>({
+      query: () => ({
+        url: 'auth/logout',
+        method: 'POST',
+        credentials: 'include', // Include cookies
+      }),
+      async onQueryStarted(_arg, { queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          // Cookies are automatically cleared by the server
+          console.log('Logout successful, cookies cleared');
+        } catch (error) {
+          console.error('Logout failed:', error);
+        }
+      },
+    }),
+    
+    // Check authentication status
+    checkAuth: builder.query<{ authenticated: boolean }, void>({
+      query: () => ({
+        url: 'files/',
+        method: 'GET',
+        credentials: 'include',
+      }),
+      transformResponse: () => ({ authenticated: true }),
+      transformErrorResponse: () => ({ authenticated: false }),
     }),
     
     // Protected file upload endpoint
@@ -159,7 +165,7 @@ export const apiSlice = createApi({
       query: (fileId) => ({
         url: `files/${fileId}/download`,
         method: 'GET',
-        responseHandler: (response) => response.blob(),
+        responseHandler: (response: Response) => response.blob(),
       }),
     }),
 
@@ -177,6 +183,8 @@ export const apiSlice = createApi({
 export const {
   useLoginMutation,
   useRegisterMutation,
+  useLogoutMutation,        // Nuevo export
+  useCheckAuthQuery,        // Nuevo export
   useUploadFileMutation,
   useVerifyFileMutation,
   useDownloadFileMutation,  // Nuevo export
