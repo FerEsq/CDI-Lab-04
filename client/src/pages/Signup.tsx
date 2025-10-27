@@ -48,7 +48,7 @@ const Signup = () => {
         .required('Campo requerido')
         .matches(/[A-Z]/, 'La contraseña debe contener al menos una letra mayúscula')
         .matches(/[a-z]/, 'La contraseña debe contener al menos una letra minúscula')
-        .matches(/[0-9]/, 'La contraseña debe contener al menos un número')
+        .matches(/\d/, 'La contraseña debe contener al menos un número')  // ← CAMBIO AQUÍ
         .matches(/[^A-Za-z0-9]/, 'La contraseña debe contener al menos un carácter especial'),
     }),
     onSubmit: (values) => {

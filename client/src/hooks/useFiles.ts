@@ -100,7 +100,7 @@ const useFiles = () => {
                 
                 // Crear un objeto URL para el blob recibido
                 const blob = result.data;
-                const url = window.URL.createObjectURL(blob);
+                const url = globalThis.URL.createObjectURL(blob);
                 
                 // Crear un elemento ancla temporal para descargar el archivo
                 const a = document.createElement('a');
@@ -110,8 +110,8 @@ const useFiles = () => {
                 a.click();
                 
                 // Limpieza
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
+                globalThis.URL.revokeObjectURL(url);
+                a.remove();
                 
                 setDownloadSuccess(true);
                 return result.data;
