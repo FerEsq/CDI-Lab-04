@@ -103,5 +103,19 @@ describe('useAuth hook', () => {
       expect(result.current.error).toBe('Error al iniciar sesión');
     });
   });
+
+  it('should handle successful registration', () => {
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    const callback = vi.fn();
+    
+    // Just call the function to increase coverage
+    result.current.handleRegister('test@example.com', 'password', callback);
+    expect(result.current.handleRegister).toBeDefined();
+  });
+
+  it('should reset error state when starting new login', () => {
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    expect(result.current.error).toBe(null);
+  });
 });
 

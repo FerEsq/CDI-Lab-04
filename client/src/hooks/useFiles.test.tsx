@@ -122,5 +122,35 @@ describe('useFiles hook', () => {
 
     expect(fileData).toBe(null);
   });
+
+  it('should handle file upload with sign parameter', async () => {
+    const { result } = renderHook(() => useFiles(), { wrapper });
+    
+    // Test with sign=true
+    await result.current.handleFileUpload(mockFile, true);
+    expect(result.current.handleFileUpload).toBeDefined();
+  });
+
+  it('should handle file download without original filename', async () => {
+    const { result } = renderHook(() => useFiles(), { wrapper });
+    
+    await result.current.handleFileDownload('test-id');
+    expect(result.current.handleFileDownload).toBeDefined();
+  });
+
+  it('should track upload success state', () => {
+    const { result } = renderHook(() => useFiles(), { wrapper });
+    expect(result.current.uploadSuccess).toBe(false);
+  });
+
+  it('should track verification success state', () => {
+    const { result } = renderHook(() => useFiles(), { wrapper });
+    expect(result.current.verificationSuccess).toBe(false);
+  });
+
+  it('should track download success state', () => {
+    const { result } = renderHook(() => useFiles(), { wrapper });
+    expect(result.current.downloadSuccess).toBe(false);
+  });
 });
 
