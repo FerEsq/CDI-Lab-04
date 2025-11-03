@@ -29,9 +29,9 @@ export default defineConfig({
         'src/store/store.ts', // Redux store config
         'src/store/api/types.ts', // Type definitions
         'src/store/middleware/', // Middleware
-        'src/store/api/api-slice.ts', // API config (heavily auto-generated)
-        'src/pages/Files.tsx', // Complex page with file management
-        'src/pages/Verify.tsx', // Complex verification logic
+        'src/store/api/api-slice.ts', // API auto-generated
+        'src/pages/Files.tsx', // Complex UI logic
+        'src/pages/Verify.tsx', // Complex verification logic  
       ],
       include: ['src/**/*.{ts,tsx}'], // Solo incluir código fuente
       all: false, // No incluir archivos no importados

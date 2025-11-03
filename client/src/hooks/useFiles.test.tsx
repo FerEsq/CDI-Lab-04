@@ -152,5 +152,36 @@ describe('useFiles hook', () => {
     const { result } = renderHook(() => useFiles(), { wrapper });
     expect(result.current.downloadSuccess).toBe(false);
   });
+
+  it('should expose all file operations', () => {
+    const { result } = renderHook(() => useFiles(), { wrapper });
+    expect(result.current.handleFileUpload).toBeDefined();
+    expect(result.current.handleFileVerification).toBeDefined();
+    expect(result.current.handleFileDownload).toBeDefined();
+    expect(result.current.fetchFileData).toBeDefined();
+    expect(result.current.resetStates).toBeDefined();
+  });
+
+  it('should have correct function types', () => {
+    const { result } = renderHook(() => useFiles(), { wrapper });
+    expect(typeof result.current.handleFileUpload).toBe('function');
+    expect(typeof result.current.handleFileVerification).toBe('function');
+    expect(typeof result.current.handleFileDownload).toBe('function');
+    expect(typeof result.current.fetchFileData).toBe('function');
+    expect(typeof result.current.resetStates).toBe('function');
+  });
+
+  it('should have loading states as booleans', () => {
+    const { result } = renderHook(() => useFiles(), { wrapper });
+    expect(typeof result.current.isUploadLoading).toBe('boolean');
+    expect(typeof result.current.isVerifyLoading).toBe('boolean');
+    expect(typeof result.current.isDownloadLoading).toBe('boolean');
+    expect(typeof result.current.isFileDataLoading).toBe('boolean');
+  });
+
+  it('should initialize fileData as null', () => {
+    const { result } = renderHook(() => useFiles(), { wrapper });
+    expect(result.current.fileData).toBe(null);
+  });
 });
 

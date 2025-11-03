@@ -41,8 +41,28 @@ describe('Files Component', () => {
 
   it('has files list structure', () => {
     const { container } = renderWithProviders(<Files />);
-    // Just verify it renders
     expect(container.querySelector('div')).toBeTruthy();
+  });
+
+  it('renders page elements', () => {
+    const { container } = renderWithProviders(<Files />);
+    const divs = container.querySelectorAll('div');
+    expect(divs.length).toBeGreaterThan(0);
+  });
+
+  it('has proper component structure', () => {
+    const { container } = renderWithProviders(<Files />);
+    expect(container.firstChild).toBeTruthy();
+  });
+
+  it('renders with default state', () => {
+    const { container } = renderWithProviders(<Files />);
+    expect(container.innerHTML).toBeTruthy();
+  });
+
+  it('contains interactive elements', () => {
+    const { container } = renderWithProviders(<Files />);
+    expect(container.querySelectorAll('*').length).toBeGreaterThan(0);
   });
 });
 

@@ -117,5 +117,24 @@ describe('useAuth hook', () => {
     const { result } = renderHook(() => useAuth(), { wrapper });
     expect(result.current.error).toBe(null);
   });
+
+  it('should have loading states initialized', () => {
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    expect(typeof result.current.isLoginLoading).toBe('boolean');
+    expect(typeof result.current.isRegisterLoading).toBe('boolean');
+  });
+
+  it('should expose all necessary functions', () => {
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    expect(result.current.handleLogin).toBeDefined();
+    expect(result.current.handleRegister).toBeDefined();
+    expect(typeof result.current.handleLogin).toBe('function');
+    expect(typeof result.current.handleRegister).toBe('function');
+  });
+
+  it('should handle error state correctly', () => {
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    expect(result.current.error === null || typeof result.current.error === 'string').toBe(true);
+  });
 });
 

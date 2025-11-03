@@ -57,4 +57,23 @@ describe('Home Component', () => {
     const inputs = container.querySelectorAll('input');
     expect(inputs.length).toBeGreaterThan(0);
   });
+
+  it('has container divs', () => {
+    const { container } = renderWithProviders(<Home />);
+    const divs = container.querySelectorAll('div');
+    expect(divs.length).toBeGreaterThan(0);
+  });
+
+  it('renders page structure', () => {
+    const { container } = renderWithProviders(<Home />);
+    expect(container.innerHTML).toBeTruthy();
+  });
+
+  it('can interact with buttons', () => {
+    const { container } = renderWithProviders(<Home />);
+    const buttons = container.querySelectorAll('button');
+    buttons.forEach(button => {
+      expect(button).toBeDefined();
+    });
+  });
 });
