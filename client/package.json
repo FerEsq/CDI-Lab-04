@@ -10,7 +10,10 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "dependency-check": "dependency-check --project Client --scan . --exclude '**/node_modules/**' --exclude '**/.scannerwork/**' --exclude '**/coverage/**' --format JSON --format HTML --out ./dependency-check-report",
+    "sonar": "sonar-scanner",
+    "sonar:full": "yarn dependency-check && yarn sonar"
   },
   "dependencies": {
     "@eslint/plugin-kit": "^0.3.4",

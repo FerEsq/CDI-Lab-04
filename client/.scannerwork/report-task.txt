@@ -2,5 +2,5 @@ projectKey=Client
 serverUrl=http://localhost:9001
 serverVersion=25.10.0.114319
 dashboardUrl=http://localhost:9001/dashboard?id=Client
-ceTaskId=f1e5efe4-ab1b-48c1-ba4d-a4b30f7c18e5
-ceTaskUrl=http://localhost:9001/api/ce/task?id=f1e5efe4-ab1b-48c1-ba4d-a4b30f7c18e5
+ceTaskId=03830240-c600-452b-93bd-379738440987
+ceTaskUrl=http://localhost:9001/api/ce/task?id=03830240-c600-452b-93bd-379738440987
