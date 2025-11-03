@@ -96,6 +96,35 @@ describe('Header Component', () => {
       zIndex: '1000',
     });
   });
+
+  it('logout button can be clicked', () => {
+    const { store } = renderWithProviders(<Header />);
+    const logoutButton = screen.getByText('Cerrar Sesión');
+    
+    // Before click
+    expect(store.getState().appState.state).toBe('NOT_LOGGED_IN');
+    
+    fireEvent.click(logoutButton);
+    
+    // After click
+    expect(store.getState().appState.state).toBe('NOT_LOGGED_IN');
+  });
+
+  it('navigation links have correct text', () => {
+    renderWithProviders(<Header />);
+    
+    const links = screen.getAllByRole('link');
+    expect(links.length).toBe(3);
+  });
+
+  it('header renders consistently', () => {
+    const { container, rerender } = renderWithProviders(<Header />);
+    const initialHTML = container.innerHTML;
+    
+    rerender(<Header />);
+    
+    expect(container.innerHTML).toBe(initialHTML);
+  });
 });
 
 

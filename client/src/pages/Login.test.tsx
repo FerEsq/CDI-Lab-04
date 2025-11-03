@@ -220,5 +220,31 @@ describe('Login Component', () => {
     fireEvent.change(emailInput, { target: { value: 'test@test.com' } });
     expect(emailInput.value).toBe('test@test.com');
   });
+
+  it('password input can be filled', () => {
+    renderWithProviders(<Login />);
+    const passwordInput = screen.getByLabelText('Contraseña') as HTMLInputElement;
+    
+    fireEvent.change(passwordInput, { target: { value: 'TestPass123!' } });
+    expect(passwordInput.value).toBe('TestPass123!');
+  });
+
+  it('form inputs can be interacted with', () => {
+    renderWithProviders(<Login />);
+    const emailInput = screen.getByLabelText('Correo electrónico');
+    
+    expect(emailInput).toBeEnabled();
+    expect(emailInput).toBeVisible();
+  });
+
+  it('displays correct placeholder texts', () => {
+    renderWithProviders(<Login />);
+    
+    const emailInput = screen.getByPlaceholderText('ejemplo@correo.com');
+    const passwordInput = screen.getByPlaceholderText('••••••••');
+    
+    expect(emailInput).toBeInTheDocument();
+    expect(passwordInput).toBeInTheDocument();
+  });
 });
 

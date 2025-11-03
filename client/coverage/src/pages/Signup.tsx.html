@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">66.66% </span>
+                <span class="strong">73.33% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>10/15</span>
+                <span class='fraction'>11/15</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">42.85% </span>
+                <span class="strong">85.71% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>6/14</span>
+                <span class='fraction'>12/14</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">20% </span>
+                <span class="strong">40% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>1/5</span>
+                <span class='fraction'>2/5</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">66.66% </span>
+                <span class="strong">73.33% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>10/15</span>
+                <span class='fraction'>11/15</span>
             </div>
         
             
@@ -301,13 +301,13 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">12x</span>
-<span class="cline-any cline-yes">12x</span>
-<span class="cline-any cline-yes">12x</span>
-<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">25x</span>
+<span class="cline-any cline-yes">25x</span>
+<span class="cline-any cline-yes">25x</span>
+<span class="cline-any cline-yes">25x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">25x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -319,7 +319,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">25x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -341,11 +341,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">12x</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">25x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">25x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -561,8 +561,8 @@ const Signup = () =&gt; {
     },
   });
 &nbsp;
-  const togglePasswordVisibility = <span class="fstat-no" title="function not covered" >() =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    setShowPassword(!showPassword);</span>
+  const togglePasswordVisibility = () =&gt; {
+    setShowPassword(!showPassword);
   };
 &nbsp;
   return (
@@ -629,8 +629,8 @@ const Signup = () =&gt; {
               transition: 'border-color 0.3s'
             }}
           /&gt;
-          {formik.touched.email &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >formik.errors.email &amp;&amp; </span>
-<span class="branch-2 cbranch-no" title="branch not covered" >            &lt;div style={{ color: 'crimson', fontSize: '12px', marginTop: '4px' }}&gt;{formik.errors.email}&lt;/div&gt;</span>
+          {formik.touched.email &amp;&amp; formik.errors.email &amp;&amp; 
+            &lt;div style={{ color: 'crimson', fontSize: '12px', marginTop: '4px' }}&gt;{formik.errors.email}&lt;/div&gt;
           }
         &lt;/div&gt;
         
@@ -644,7 +644,7 @@ const Signup = () =&gt; {
           &lt;div style={{ position: 'relative' }}&gt;
             &lt;input 
               id="password"
-              type={showPassword ? <span class="branch-0 cbranch-no" title="branch not covered" >"text" : "</span>password"} 
+              type={showPassword ? "text" : "password"} 
               name="password" 
               placeholder="••••••••"
               onChange={formik.handleChange} 
@@ -680,11 +680,11 @@ const Signup = () =&gt; {
                 WebkitTapHighlightColor: 'transparent'
               }}
             &gt;
-              {showPassword ? <span class="branch-0 cbranch-no" title="branch not covered" >'Ocultar' : '</span>Mostrar'}
+              {showPassword ? 'Ocultar' : 'Mostrar'}
             &lt;/button&gt;
           &lt;/div&gt;
-          {formik.touched.password &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >formik.errors.password &amp;&amp; </span>
-<span class="branch-2 cbranch-no" title="branch not covered" >            &lt;div style={{ color: 'crimson', fontSize: '12px', marginTop: '4px' }}&gt;{formik.errors.password}&lt;/div&gt;</span>
+          {formik.touched.password &amp;&amp; formik.errors.password &amp;&amp; 
+            &lt;div style={{ color: 'crimson', fontSize: '12px', marginTop: '4px' }}&gt;{formik.errors.password}&lt;/div&gt;
           }
         &lt;/div&gt;
         
@@ -730,7 +730,7 @@ export default Signup;</pre></td></tr></table></pre>
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-11-03T00:45:02.385Z
+                at 2025-11-03T01:00:35.352Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
