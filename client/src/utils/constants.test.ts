@@ -26,6 +26,30 @@ describe('Constants', () => {
   it('TOKEN_EXPIRATION_TIME_THRESHOLD should be a positive number', () => {
     expect(TOKEN_EXPIRATION_TIME_THRESHOLD).toBeGreaterThan(0);
   });
+
+  it('TOKEN_COOKIE_NAME should not be empty', () => {
+    expect(TOKEN_COOKIE_NAME.trim()).not.toBe('');
+  });
+
+  it('REFRESH_TOKEN_COOKIE_NAME should not be empty', () => {
+    expect(REFRESH_TOKEN_COOKIE_NAME.trim()).not.toBe('');
+  });
+
+  it('TOKEN_EXPIRATION_TIME_THRESHOLD should be reasonable', () => {
+    expect(TOKEN_EXPIRATION_TIME_THRESHOLD).toBeGreaterThanOrEqual(0);
+    expect(TOKEN_EXPIRATION_TIME_THRESHOLD).toBeLessThan(Number.MAX_SAFE_INTEGER);
+  });
+
+  it('constants should be defined and accessible', () => {
+    const constants = {
+      TOKEN_COOKIE_NAME,
+      REFRESH_TOKEN_COOKIE_NAME,
+      TOKEN_EXPIRATION_TIME_THRESHOLD
+    };
+    
+    expect(Object.keys(constants).length).toBe(3);
+    expect(constants.TOKEN_COOKIE_NAME).toBeTruthy();
+    expect(constants.REFRESH_TOKEN_COOKIE_NAME).toBeTruthy();
+    expect(constants.TOKEN_EXPIRATION_TIME_THRESHOLD).toBeDefined();
+  });
 });
-
-

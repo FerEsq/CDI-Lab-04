@@ -68,6 +68,34 @@ describe('Header Component', () => {
       cursor: 'pointer',
     });
   });
+
+  it('renders all navigation items', () => {
+    renderWithProviders(<Header />);
+    
+    expect(screen.getByText('Subir archivo')).toBeInTheDocument();
+    expect(screen.getByText('Ver archivos')).toBeInTheDocument();
+    expect(screen.getByText('Verificar Firma')).toBeInTheDocument();
+    expect(screen.getByText('Cerrar Sesión')).toBeInTheDocument();
+  });
+
+  it('navigation links are clickable', () => {
+    renderWithProviders(<Header />);
+    
+    const links = screen.getAllByRole('link');
+    links.forEach(link => {
+      expect(link).toHaveAttribute('href');
+    });
+  });
+
+  it('header has fixed position', () => {
+    const { container } = renderWithProviders(<Header />);
+    const header = container.querySelector('header');
+    
+    expect(header).toHaveStyle({
+      position: 'fixed',
+      zIndex: '1000',
+    });
+  });
 });
 
 

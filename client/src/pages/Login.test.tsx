@@ -195,5 +195,30 @@ describe('Login Component', () => {
       expect(screen.queryByText('Correo electrónico inválido')).not.toBeInTheDocument();
     });
   });
+
+  it('displays form styling correctly', () => {
+    const { container } = renderWithProviders(<Login />);
+    const form = container.querySelector('form');
+    expect(form).toHaveStyle({ display: 'flex' });
+  });
+
+  it('shows all form controls', () => {
+    renderWithProviders(<Login />);
+    const emailInput = screen.getByLabelText('Correo electrónico');
+    const passwordInput = screen.getByLabelText('Contraseña');
+    const submitButton = screen.getByRole('button', { name: /iniciar sesión/i });
+    
+    expect(emailInput).toBeVisible();
+    expect(passwordInput).toBeVisible();
+    expect(submitButton).toBeVisible();
+  });
+
+  it('maintains input values on change', () => {
+    renderWithProviders(<Login />);
+    const emailInput = screen.getByLabelText('Correo electrónico') as HTMLInputElement;
+    
+    fireEvent.change(emailInput, { target: { value: 'test@test.com' } });
+    expect(emailInput.value).toBe('test@test.com');
+  });
 });
 

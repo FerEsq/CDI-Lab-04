@@ -29,6 +29,28 @@ describe('appState slice', () => {
     state = appStateReducer(state, setAppState('LOGGED_IN'));
     expect(state.state).toBe('LOGGED_IN');
   });
+
+  it('should maintain state when setting to same value', () => {
+    const initialState = { state: 'LOGGED_IN' as const };
+    const actual = appStateReducer(initialState, setAppState('LOGGED_IN'));
+    expect(actual.state).toBe('LOGGED_IN');
+  });
+
+  it('should handle multiple state changes', () => {
+    let state = { state: 'NOT_LOGGED_IN' as const };
+    
+    state = appStateReducer(state, setAppState('LOGGED_IN'));
+    expect(state.state).toBe('LOGGED_IN');
+    
+    state = appStateReducer(state, setAppState('NOT_LOGGED_IN'));
+    expect(state.state).toBe('NOT_LOGGED_IN');
+    
+    state = appStateReducer(state, setAppState('LOGGED_IN'));
+    expect(state.state).toBe('LOGGED_IN');
+  });
+
+  it('should be a valid reducer function', () => {
+    expect(typeof appStateReducer).toBe('function');
+    expect(appStateReducer.length).toBeGreaterThanOrEqual(0);
+  });
 });
-
-

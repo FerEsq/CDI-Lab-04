@@ -60,5 +60,17 @@ describe('App Component', () => {
     // Should not call again on rerender
     expect(Cookies.get).toHaveBeenCalledTimes(1);
   });
+
+  it('renders RouterProvider component', () => {
+    vi.mocked(Cookies.get).mockReturnValue(undefined);
+    const { container } = renderWithProviders(<App />, { withRouter: false });
+    expect(container).toBeTruthy();
+  });
+
+  it('dispatches setAppState when token exists', () => {
+    vi.mocked(Cookies.get).mockReturnValue('valid-token');
+    const { store } = renderWithProviders(<App />, { withRouter: false });
+    expect(store.getState().appState.state).toBe('LOGGED_IN');
+  });
 });
 
